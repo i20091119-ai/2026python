@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(ROOT, "content"))
 
 import runner  # noqa: E402
 
-WEEKS = ["week1", "week2", "week3", "week4", "week5", "week6"]
+WEEKS = ["week2", "week3", "week4", "week5", "week6", "week7"]
 
 problems_total = 0
 errors = []
@@ -39,6 +39,9 @@ def build_concept(week_id, c):
         res = run_code(b["code"], b.get("stdin"), time_limit=10)
         b["output"] = res["display"]
         b["is_error"] = res["error"] is not None
+        if b.get("nondeterministic"):
+            # random 처럼 매번 값이 달라지는 예제. 저장된 결과는 한 번 실행한 예시일 뿐이다.
+            b["varies"] = True
         if res["error"]:
             b["error_text"] = res["error"]["traceback"]
             # 오류를 '보여주려고' 만든 예제인지 확인 (note 에 오류명이 있으면 의도된 것)
@@ -50,6 +53,7 @@ def build_concept(week_id, c):
                     f"{res['error']['message'][:70]}"
                 )
         b.pop("live", None)
+        b.pop("nondeterministic", None)
     return c
 
 
@@ -106,11 +110,11 @@ def build_problem(week_id, p):
 
 def main():
     weeks = []
-    for i, name in enumerate(WEEKS, start=1):
+    for name in WEEKS:
         mod = __import__(name)
         week = {
             "id": name,
-            "no": i,
+            "no": getattr(mod, "WEEK_NO", int(name.replace("week", ""))),
             "title": mod.TITLE,
             "subtitle": mod.SUBTITLE,
             "concepts": [build_concept(name, c) for c in mod.CONCEPTS],

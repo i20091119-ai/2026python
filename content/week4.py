@@ -1,8 +1,9 @@
-"""4주차 — 반복문: range, for, while, break, continue (교재 5장)"""
+"""4주차 — 반복문: range, for, while, break, continue"""
 from blocks import P, UL, CODE, TABLE, TIP, WARN, OUT, concept, problem, test
 
+WEEK_NO = 4
 TITLE = "반복문 · range() · break와 continue"
-SUBTITLE = "교재 5장 (반복문)"
+SUBTITLE = "for 반복문, while 반복문, 누적 패턴"
 
 CONCEPTS = [
     concept("w4-range", "range() — 정수의 범위", [
@@ -42,11 +43,14 @@ CONCEPTS = [
         """),
         P("리스트의 요소를 하나씩 꺼내 쓸 수도 있습니다."),
         CODE("""
-        array = [273, 32, 103, 57, 52]
-
-        for element in array:
-            print(element)
+        for a in [1, 2, 3, 4, 5]:
+            print(a)
         """),
+        P("**문자열도 반복할 수 있습니다.** 한 글자씩 꺼내집니다."),
+        CODE("""
+        for a in "Hello":
+            print(a)
+        """, note="리스트뿐 아니라 문자열도 for 로 하나씩 꺼낼 수 있습니다."),
         P("**몇 번째** 반복인지 알아야 할 때는 `range(len(리스트))`를 씁니다."),
         CODE("""
         array = [273, 32, 103, 57, 52]
@@ -64,7 +68,44 @@ CONCEPTS = [
         for i in reversed(range(5)):
             print("현재 반복 변수: {}".format(i))
         """, note="reversed() 쪽이 읽기 쉬워서 더 자주 쓰입니다."),
-    ], summary="for 변수 in 범위: — 콜론 뒤 네 칸 들여쓰기"),
+        TIP("""
+        반복이 끝난 뒤에도 반복 변수에는 **마지막 값**이 남아 있습니다.
+        Thonny 의 Variables 패널에서 확인할 수 있고, 이 워크북에서도 실행 후 오른쪽에 보입니다.
+        """),
+    ], summary="for 변수 in 범위: — 리스트와 문자열 모두 반복 가능"),
+
+    concept("w4-accum", "누적 패턴 — 합계 구하기", [
+        P("""
+        반복문에서 가장 많이 쓰는 형태입니다.
+        **반복 전에 변수를 초기화**하고, **반복 안에서 `+=` 로 더해 갑니다.**
+        """),
+        CODE("""
+        total = 0
+
+        for a in range(1, 11):
+            total = total + a
+
+        print(total)
+        """, note="1부터 10까지 더해 55가 나옵니다."),
+        P("나눗셈을 누적할 수도 있습니다."),
+        CODE("""
+        total = 0
+
+        for i in range(1, 6):
+            total = total + 1 / i
+
+        print(total)
+        """, note="1/1 + 1/2 + 1/3 + 1/4 + 1/5 을 더한 값입니다."),
+        WARN("""
+        **초깃값을 잘 골라야 합니다.**
+        더하기를 누적할 때는 `0`, 곱하기를 누적할 때는 `1` 에서 시작합니다.
+        곱셈을 `0` 에서 시작하면 무엇을 곱해도 결과가 `0` 입니다.
+        """),
+        WARN("""
+        `sum` 은 파이썬이 이미 쓰고 있는 이름입니다. 변수 이름으로 써도 동작은 하지만
+        원래 기능을 못 쓰게 되므로 `total` 이나 `sum_value` 처럼 바꿔 쓰는 편이 좋습니다.
+        """),
+    ], summary="누적 = 초기화 → 반복 안에서 += · 덧셈은 0, 곱셈은 1로 시작"),
 
     concept("w4-while", "while 반복문", [
         P("""
@@ -85,21 +126,27 @@ CONCEPTS = [
         `=`와 `==`는 완전히 다릅니다. `=`는 **값을 넣는** 것이고, `==`는 **같은지 비교**하는 것입니다.
         조건에는 반드시 `==`를 쓰세요.
         """),
-        P("리스트에 특정 값이 남아 있는 동안 반복하는 것처럼, **상태**를 조건으로 쓸 수도 있습니다."),
+        P("`for` 로 쓴 것을 `while` 로 바꿀 수도 있습니다. 수업에서 해 본 방식입니다."),
         CODE("""
-        list_test = [1, 2, 1, 2]
-        value = 2
+        # for 방식
+        total = 0
+        for i in range(1, 6):
+            total += 1 / i
+        print(total)
 
-        while value in list_test:
-            list_test.remove(value)
-
-        print(list_test)
-        """, note="remove() 는 값을 하나만 지우므로, 모두 지우려면 반복이 필요합니다."),
+        # 같은 일을 while 로
+        total = 0
+        i = 1
+        while i <= 5:
+            total += 1 / i
+            i = i + 1
+        print(total)
+        """, note="range(1, 6) 과 while i <= 5 가 같은 범위입니다."),
         TIP("""
         **for 와 while 중 무엇을 쓸까?**
         반복 횟수가 정해져 있으면 `for`, '~할 때까지' 처럼 조건에 달려 있으면 `while` 이 자연스럽습니다.
         """),
-    ], summary="while 조건: — 조건이 참인 동안 반복. 조건을 바꿔 주는 코드를 잊지 말 것"),
+    ], summary="while 조건: — 조건이 참인 동안 반복"),
 
     concept("w4-break", "break 와 continue", [
         P("`break`는 반복문을 **완전히 빠져나가고**, `continue`는 **이번 회차만 건너뛰고** 다음 반복으로 갑니다."),
@@ -165,7 +212,25 @@ PROBLEMS = [
             TIP("`range(1, 9)`로 쓰면 `8`까지만 나옵니다. 끝 값 미포함 규칙에서 나오는 가장 흔한 실수입니다."),
         ]),
 
-    problem("w4-p3", "1부터 100까지 합", level=2, tags=["for", "누적"],
+    problem("w4-p3", "문자열 한 글자씩", level=1, tags=["for", "문자열"],
+        prompt=[
+            P("문자열 `\"Hello\"` 의 각 글자를 한 줄에 하나씩 출력하세요."),
+            OUT("H\ne\nl\nl\no"),
+        ],
+        tests=[test()],
+        hints=[
+            "문자열도 for 반복문으로 하나씩 꺼낼 수 있습니다.",
+            'for a in "Hello": 형태로 씁니다.',
+            "반복문 안에서 print(a) 를 하면 됩니다.",
+        ],
+        solution='for a in "Hello":\n    print(a)',
+        explain=[
+            P("문자열은 문자를 순서대로 담은 컨테이너와 비슷해서 `for` 로 반복할 수 있습니다."),
+            P("반복이 끝난 뒤 `a` 에는 마지막 글자 `'o'` 가 남아 있습니다. 오른쪽 Variables 에서 확인해 보세요."),
+            TIP("`range(len(\"Hello\"))` 로 인덱스를 돌려도 되지만, 글자 자체가 필요하면 이 방식이 훨씬 간단합니다."),
+        ]),
+
+    problem("w4-p4", "1부터 100까지 합", level=2, tags=["for", "누적"],
         prompt=[
             P("`1`부터 `100`까지 모든 정수의 합을 출력하세요."),
             OUT("5050"),
@@ -180,9 +245,10 @@ PROBLEMS = [
         explain=[
             P("**누적 변수** 패턴입니다. 반복 전에 `0`으로 초기화하고, 반복 안에서 `+=`로 더해 갑니다."),
             WARN("`print(total)`을 들여쓰기 안에 넣으면 100번 출력됩니다. 반복이 끝난 뒤 한 번만 출력하려면 들여쓰기를 빼야 합니다."),
+            TIP("변수 이름을 `sum` 으로 쓰지 마세요. 파이썬이 이미 쓰는 이름입니다."),
         ]),
 
-    problem("w4-p4", "짝수만 출력", level=2, tags=["continue", "for"],
+    problem("w4-p5", "짝수만 출력", level=2, tags=["continue", "for"],
         prompt=[
             P("`1`부터 `10`까지 중 **짝수만** 한 줄에 하나씩 출력하세요. 단, `continue`를 사용하세요."),
             OUT("2\n4\n6\n8\n10"),
@@ -200,40 +266,57 @@ PROBLEMS = [
             TIP("`range(2, 11, 2)`로 아예 짝수만 만들어 반복하는 방법도 있습니다. 조건 검사 자체가 필요 없어집니다."),
         ]),
 
-    problem("w4-p5", "몇을 더할 때 10000을 넘는가", level=3, tags=["while", "누적"],
+    problem("w4-p6", "for 를 while 로 바꾸기", level=2, tags=["while", "누적"],
+        prompt=[
+            P("아래 `for` 반복문과 **똑같이 동작하는** 코드를 `while` 로 작성하세요."),
+            OUT("total = 0\nfor i in range(1, 11):\n    total += i\nprint(total)"),
+            P("출력 결과는 `55` 입니다."),
+        ],
+        tests=[test()],
+        hints=[
+            "먼저 i 를 시작값 1 로 만들어 둡니다.",
+            "range(1, 11) 은 1부터 10까지이므로 조건은 while i <= 10: 입니다.",
+            "반복문 안에서 total 을 더한 뒤 i = i + 1 로 값을 키워야 합니다.",
+        ],
+        solution="total = 0\ni = 1\nwhile i <= 10:\n    total += i\n    i = i + 1\nprint(total)",
+        explain=[
+            P("`for`는 반복 변수를 자동으로 키워 주지만, `while`은 **직접 키워야** 합니다."),
+            P("`range(1, 11)`과 `while i <= 10`이 같은 범위입니다. 끝 값 처리가 어떻게 다른지 보세요."),
+            TIP("수업에서도 `for` 로 만든 코드를 주석 처리하고 `while` 로 바꿔 보셨습니다. 두 방식을 오가며 연습하면 반복의 구조가 잘 보입니다."),
+        ]),
+
+    problem("w4-p7", "몇을 더할 때 10000을 넘는가", level=3, tags=["while", "누적"],
         prompt=[
             P("`1`부터 숫자를 하나씩 증가시키며 더해 나갈 때, **몇을 더하는 순간 합이 10000을 넘는지** 구하세요."),
             P("그때의 합도 함께 출력합니다. 출력 형식은 아래와 같습니다."),
             OUT("141를 더할 때 10000을 넘으며 그때의 값은 10011입니다."),
-            P("`1 + 2 + 3 + ... ` 식으로 계속 더해 나가면 됩니다."),
         ],
         tests=[test()],
         hints=[
-            "sum 은 파이썬이 이미 쓰는 이름이므로 sum_value 같은 다른 이름을 쓰세요.",
-            "i = 1, sum_value = 0 으로 시작해 while sum_value <= 10000: 조건으로 반복합니다.",
-            "반복 안에서 sum_value += i 하고 i += 1 합니다. 반복이 끝난 뒤 i는 1 더 커져 있으니 출력할 땐 i - 1 을 쓰세요.",
+            "sum 은 파이썬이 이미 쓰는 이름이므로 total 같은 다른 이름을 쓰세요.",
+            "i = 1, total = 0 으로 시작해 while total <= 10000: 조건으로 반복합니다.",
+            "반복 안에서 total += i 하고 i += 1 합니다. 반복이 끝난 뒤 i는 1 더 커져 있으니 출력할 땐 i - 1 을 쓰세요.",
         ],
         solution='''limit = 10000
 i = 1
-sum_value = 0
+total = 0
 
-while sum_value <= limit:
-    sum_value += i
+while total <= limit:
+    total += i
     i += 1
 
-print("{}를 더할 때 {}을 넘으며 그때의 값은 {}입니다.".format(i - 1, limit, sum_value))''',
+print("{}를 더할 때 {}을 넘으며 그때의 값은 {}입니다.".format(i - 1, limit, total))''',
         explain=[
             P("`while`은 반복 횟수를 미리 알 수 없을 때 씁니다. 여기서는 '넘을 때까지'가 조건입니다."),
             P("반복이 끝났을 때 `i`는 이미 한 번 더 증가한 상태라 `i - 1`이 실제로 마지막에 더한 수입니다."),
             WARN("""
             교재 슬라이드에는 답이 `142`로 적혀 있지만, `1`부터 `141`까지 더하면 `10011`입니다.
             교재 코드가 `i - 1` 대신 `i`를 출력해서 하나 크게 나온 것입니다.
-            직접 확인해 보세요. `141 × 142 ÷ 2 = 10011` 입니다.
+            `141 × 142 ÷ 2 = 10011` 로 확인할 수 있습니다.
             """),
-            TIP("`sum`, `list`, `str` 같은 이름은 파이썬이 이미 쓰고 있습니다. 변수 이름으로 쓰면 원래 기능을 못 쓰게 되니 피하세요."),
         ]),
 
-    problem("w4-p6", "구구단 전체", level=3, tags=["for", "중첩 반복문"],
+    problem("w4-p8", "구구단 전체", level=3, tags=["for", "중첩 반복문"],
         prompt=[
             P("`2`단부터 `4`단까지 출력하세요. 각 단 사이에는 빈 줄을 하나 넣습니다."),
             OUT("2 x 1 = 2\n2 x 2 = 4\n2 x 3 = 6\n\n3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n\n4 x 1 = 4\n4 x 2 = 8\n4 x 3 = 12\n"),

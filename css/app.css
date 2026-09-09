@@ -949,3 +949,247 @@ pre {
   .rail, .topbar-actions, .actions, .tabs { display: none; }
   .concept-body, .prob-body { display: block !important; }
 }
+
+/* ==========================================================================
+   Thonny 를 닮은 실습 패널
+   수업에서 쓰는 편집기와 비슷한 배치로 만들어 익숙하게 연습할 수 있도록 한다.
+   편집기 · Shell · Variables 세 부분으로 나뉜다.
+   ========================================================================== */
+
+.thonny {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 상단 도구 모음 */
+.th-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.th-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--ok);
+  color: #fff;
+  border: 1px solid transparent;
+  transition: filter .14s;
+}
+.th-run:hover { filter: brightness(1.08); }
+.th-run:disabled { opacity: .5; cursor: not-allowed; }
+:root[data-theme="dark"] .th-run { color: #08210f; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .th-run { color: #08210f; }
+}
+
+.th-btn {
+  padding: 4px 11px;
+  border-radius: 5px;
+  font-size: 13px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  transition: color .14s, border-color .14s;
+}
+.th-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.th-spacer { flex: 1; }
+
+.th-kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* 파일 탭 */
+.th-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 4px 8px 0;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.th-tab {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 3px 12px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  background: var(--code-bg);
+  color: var(--ink-soft);
+  margin-bottom: -1px;
+}
+.th-tab[data-dirty="true"]::after { content: " *"; color: var(--accent); }
+
+/* 편집기: 줄 번호 + 입력 영역 */
+.th-editor {
+  display: flex;
+  background: var(--code-bg);
+  min-height: 0;
+  position: relative;
+}
+
+.th-gutter {
+  flex: 0 0 auto;
+  padding: 10px 8px 10px 10px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--code-gutter);
+  background: var(--surface-2);
+  border-right: 1px solid var(--line);
+  user-select: none;
+  overflow: hidden;
+  white-space: pre;
+  min-width: 34px;
+  font-variant-numeric: tabular-nums;
+}
+
+.th-code {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  resize: vertical;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.62;
+  background: transparent;
+  color: var(--code-ink);
+  tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  min-height: 150px;
+}
+.th-code::placeholder { color: var(--ink-faint); }
+.th-editor:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
+
+/* 입력값 칸 */
+.th-stdin {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.th-stdin > label {
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-weight: 600;
+  white-space: nowrap;
+  padding-top: 5px;
+}
+.th-stdin textarea {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 8px;
+  resize: vertical;
+  min-height: 28px;
+  line-height: 1.5;
+}
+.th-stdin textarea:focus { outline: none; border-color: var(--accent); }
+.th-stdin textarea[readonly] { background: var(--surface-2); color: var(--ink-soft); }
+
+/* 아래쪽 패널 제목 (Shell / Variables) */
+.th-pane-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.th-pane-title .th-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+/* Shell 출력 */
+.th-shell {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--surface);
+  color: var(--ink);
+  tab-size: 8;
+  margin: 0;
+}
+.th-shell .th-run-line { color: var(--ink-faint); }
+.th-shell .th-err { color: var(--bad); }
+.th-shell .th-empty { color: var(--ink-faint); font-style: italic; }
+
+/* Variables 패널 */
+.th-vars { background: var(--surface); }
+.th-vars table { font-size: 12px; }
+.th-vars thead th {
+  background: var(--surface);
+  font-size: 11px;
+  padding: 4px 10px;
+  color: var(--ink-faint);
+}
+.th-vars tbody td {
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--line);
+}
+.th-vars tbody td:first-child { color: var(--code-def); font-weight: 600; }
+.th-vars tbody td:nth-child(2) { color: var(--ink); }
+.th-vars tbody td:last-child { color: var(--ink-faint); font-size: 11px; }
+.th-vars-empty {
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* 오류 도움말 (Thonny 의 Assistant 를 흉내) */
+.th-assist {
+  border-top: 1px solid var(--line);
+  background: var(--warn-wash);
+  padding: 8px 10px;
+  font-size: 12.5px;
+  color: var(--ink);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.th-assist b { color: var(--warn); flex-shrink: 0; }

@@ -40,6 +40,7 @@ for (const week of DATA.weeks) {
     for (const b of c.blocks) {
       if (b.t !== "code" || b.output === undefined) continue;
       if (b.is_error) continue; // 오류를 보여주는 예제는 메시지 문구가 엔진마다 달라 제외
+      if (b.varies) continue;   // random 처럼 매번 달라지는 예제는 비교할 수 없다
       checked++;
       const r = runSkulpt(b.code, b.stdin);
       if (r.error) {

@@ -1,8 +1,9 @@
-"""5주차 — 불 자료형과 if 조건문 (교재 6장)"""
+"""5주차 — 불 자료형과 조건문 (if / elif / else)"""
 from blocks import P, UL, CODE, TABLE, TIP, WARN, OUT, concept, problem, test
 
-TITLE = "불 자료형과 if 조건문"
-SUBTITLE = "교재 6장 (불 자료형과 if 조건문)"
+WEEK_NO = 5
+TITLE = "불 자료형과 조건문"
+SUBTITLE = "if · elif · else · 논리 연산자 · 중첩 조건문"
 
 CONCEPTS = [
     concept("w5-bool", "불(bool) 자료형과 비교 연산자", [
@@ -28,7 +29,8 @@ CONCEPTS = [
         print(x > 10 and x < 20)
         print(x < 10 or x > 20)
         print(not (x == 15))
-        """),
+        print(x != 15)
+        """, note="not (x == 15) 와 x != 15 는 완전히 같은 뜻입니다."),
         TIP("""
         파이썬에서는 `10 < x < 20` 처럼 **연달아 비교**할 수 있습니다.
         `x > 10 and x < 20` 과 같은 뜻이면서 훨씬 읽기 좋습니다.
@@ -38,11 +40,15 @@ CONCEPTS = [
     concept("w5-if", "if 조건문", [
         P("`if 조건:` 다음 줄부터 **네 칸 들여쓰기**한 코드는 조건이 참일 때만 실행됩니다."),
         CODE("""
-        number = int(input("정수 입력> "))
+        a = 10
 
-        if number % 2 == 0:
-            print("짝수입니다")
-        """, stdin=["4"]),
+        if a > 0:
+            print("0보다 큽니다")
+        """),
+        P("""
+        조건문의 흐름은 **순서도**로 그려 보면 이해가 쉽습니다.
+        값을 준비하고 → 조건을 판단하고(마름모) → 참이면 이쪽, 거짓이면 저쪽으로 갑니다.
+        """),
         WARN("""
         **IndentationError** — `if` 다음 줄에는 반드시 들여쓰기가 있어야 합니다.
         파이썬은 들여쓰기로 코드의 소속을 판단하므로, 빠뜨리면 오류입니다. 네 칸(스페이스)이 표준입니다.
@@ -51,7 +57,12 @@ CONCEPTS = [
         if True:
         print("들여쓰기가 없습니다")
         """, note="IndentationError: expected an indented block"),
-    ], summary="if 조건: — 참일 때만 들여쓴 코드 실행"),
+        WARN("""
+        조건 끝의 **콜론(`:`)** 을 빠뜨리면 `SyntaxError` 가 납니다.
+        `if`, `elif`, `else`, `for`, `while`, `def` 모두 콜론이 필요합니다.
+        Thonny 는 이럴 때 "Did you forget the colon?" 이라고 알려 주기도 합니다.
+        """),
+    ], summary="if 조건: — 참일 때만 들여쓴 코드 실행. 콜론과 들여쓰기 필수"),
 
     concept("w5-else", "else 와 elif", [
         P("""
@@ -66,6 +77,22 @@ CONCEPTS = [
         else:
             print("홀수입니다")
         """, stdin=["13"]),
+        WARN("""
+        **`else` 는 만능이 아닙니다.**
+        `if a > 0` 다음에 `else: print("0보다 작습니다")` 라고 쓰면
+        `a` 가 `0` 일 때도 "0보다 작습니다" 가 나옵니다. 0은 크지도 작지도 않은데 말이죠.
+        이럴 때 `elif` 가 필요합니다.
+        """),
+        CODE("""
+        a = 0
+
+        if a > 0:
+            print("0보다 큽니다")
+        elif a == 0:
+            print("0입니다")
+        else:
+            print("0보다 작습니다")
+        """, note="elif 를 넣어야 세 가지 경우를 제대로 나눌 수 있습니다."),
         P("세 개 이상의 조건을 연결할 때는 `elif`를 `if`와 `else` 사이에 넣습니다."),
         CODE("""
         month = 4
@@ -82,10 +109,57 @@ CONCEPTS = [
         TIP("""
         `elif`는 **위 조건이 모두 거짓일 때만** 검사합니다.
         그래서 위에서 이미 걸러진 조건은 아래에서 다시 쓸 필요가 없습니다.
-        예를 들어 `if score >= 90` 다음의 `elif score >= 80` 은 `score < 90` 을 덧붙이지 않아도 됩니다.
-        조건 비교가 반으로 줄고 코드 가독성도 좋아집니다.
+        `if score >= 90` 다음의 `elif score >= 80` 은 `score < 90` 을 덧붙이지 않아도 됩니다.
         """),
     ], summary="if / elif / else — 위에서부터 검사, 하나만 실행"),
+
+    concept("w5-nested", "중첩 조건문과 값 비교하기", [
+        P("조건문 안에 조건문을 넣을 수 있습니다. 들여쓰기가 소속을 결정합니다."),
+        CODE("""
+        a = 10
+        b = 20
+        c = 30
+
+        if a > b:
+            if a > c:
+                print("a가 제일 큽니다")
+            else:
+                print("c가 제일 큽니다")
+        else:
+            if b > c:
+                print("b가 제일 큽니다")
+            else:
+                print("c가 제일 큽니다")
+        """, note="세 수 중 가장 큰 수를 찾습니다. else 를 빠뜨리면 답이 안 나오는 경우가 생깁니다."),
+        WARN("""
+        중첩 조건문은 **모든 갈래에 결론이 있어야** 합니다.
+        안쪽 `else` 를 빠뜨리면 특정 입력에서 아무것도 출력되지 않습니다.
+        위 코드에서 마지막 `else` 를 지우면 `a=1, b=2, c=3` 일 때 출력이 사라집니다.
+        """),
+        P("""
+        수가 많아지면 중첩이 깊어져 실수하기 쉽습니다.
+        **둘씩 짝지어 이긴 것끼리 다시 비교하는** 방법이 훨씬 간단합니다.
+        """),
+        CODE("""
+        a, b, c, d = 10, 20, 30, 5
+
+        if a > b:
+            max1 = a
+        else:
+            max1 = b
+
+        if c > d:
+            max2 = c
+        else:
+            max2 = d
+
+        if max1 > max2:
+            print("가장 큰 숫자는", max1)
+        else:
+            print("가장 큰 숫자는", max2)
+        """, note="토너먼트 방식입니다. 중첩이 없어 읽기 쉽고 실수가 적습니다."),
+        TIP("중첩이 두 단계를 넘어가면 `and` / `or` 로 합치거나 위처럼 단계를 나눠 보세요."),
+    ], summary="중첩 조건문은 모든 갈래에 결론 필요 · 토너먼트 방식이 더 간단"),
 
     concept("w5-falsy", "False로 변환되는 값", [
         P("""
@@ -112,6 +186,9 @@ CONCEPTS = [
 
         if "안녕":
             print("내용이 있는 문자열은 True입니다")
+
+        if "False":
+            print("'False' 라는 문자열도 True입니다")
         """),
         TIP("""
         이 성질 덕분에 `if len(리스트) > 0:` 대신 `if 리스트:` 라고 짧게 쓸 수 있습니다.
@@ -159,7 +236,27 @@ PROBLEMS = [
             WARN("`=`와 `==`를 혼동하지 마세요. 조건에는 `==`입니다."),
         ]),
 
-    problem("w5-p2", "중첩 조건문 예측", level=2, tags=["if", "중첩"], ptype="predict",
+    problem("w5-p2", "0을 빠뜨리지 않기", level=2, tags=["elif"],
+        prompt=[
+            P("정수를 입력받아 **양수 / 0 / 음수** 를 구분해 출력하세요. 프롬프트는 `정수 입력> ` 입니다."),
+            P("출력은 각각 `0보다 큽니다`, `0입니다`, `0보다 작습니다` 로 하세요."),
+            OUT("0입니다"),
+            P("입력값이 `0`일 때의 결과입니다."),
+        ],
+        tests=[test(stdin=["0"]), test(stdin=["10"]), test(stdin=["-5"])],
+        hints=[
+            "if 와 else 만으로는 세 가지를 나눌 수 없습니다.",
+            "if 와 else 사이에 elif 를 넣으세요.",
+            "if number > 0: / elif number == 0: / else: 순서입니다.",
+        ],
+        solution='number = int(input("정수 입력> "))\n\nif number > 0:\n    print("0보다 큽니다")\nelif number == 0:\n    print("0입니다")\nelse:\n    print("0보다 작습니다")',
+        explain=[
+            P("`if / else` 만 쓰면 경우가 두 가지뿐이라 `0` 이 어느 한쪽으로 잘못 분류됩니다."),
+            P("수업 실습에서도 `if a > 0 / else` 만 있어서 `0` 이 \"0보다 작습니다\" 로 나왔습니다."),
+            TIP("경우의 수를 셀 때 **경계값**을 꼭 확인하세요. 0, 최솟값, 최댓값에서 실수가 자주 납니다."),
+        ]),
+
+    problem("w5-p3", "중첩 조건문 예측", level=2, tags=["if", "중첩"], ptype="predict",
         prompt=[P("아래 코드의 실행 결과를 예측하세요.")],
         code="""
         x = 2
@@ -182,7 +279,7 @@ PROBLEMS = [
             TIP("들여쓰기가 `else`의 소속을 결정합니다. 안쪽 `if`와 짝이 되려면 네 칸 더 들여써야 합니다."),
         ]),
 
-    problem("w5-p3", "학점 판정", level=2, tags=["elif"],
+    problem("w5-p4", "학점 판정", level=2, tags=["elif"],
         prompt=[
             P("점수를 입력받아 학점을 출력하세요. 프롬프트는 `점수> ` 입니다."),
             P("`90` 이상 A, `80` 이상 B, `70` 이상 C, 그 미만은 F 입니다."),
@@ -193,7 +290,7 @@ PROBLEMS = [
         hints=[
             "int() 로 숫자를 만든 뒤, 큰 값부터 차례로 검사하세요.",
             "if score >= 90: 으로 시작하고 elif 로 이어 갑니다.",
-            "elif 는 위 조건이 거짓일 때만 검사하므로, elif score >= 80: 만 써도 됩니다. score < 90 을 덧붙일 필요가 없습니다.",
+            "elif 는 위 조건이 거짓일 때만 검사하므로, elif score >= 80: 만 써도 됩니다.",
         ],
         solution='score = int(input("점수> "))\n\nif score >= 90:\n    print("A")\nelif score >= 80:\n    print("B")\nelif score >= 70:\n    print("C")\nelse:\n    print("F")',
         explain=[
@@ -202,11 +299,11 @@ PROBLEMS = [
             WARN("순서를 뒤집어 `>= 70`을 먼저 쓰면 `85`도 C가 됩니다. **큰 값부터** 검사해야 합니다."),
         ]),
 
-    problem("w5-p4", "논리 연산자로 합치기", level=2, tags=["논리 연산자"],
+    problem("w5-p5", "논리 연산자로 합치기", level=2, tags=["논리 연산자"],
         prompt=[
             P("아래 중첩 조건문과 **똑같이 동작하는** 코드를 `if` 하나로 만드세요."),
             OUT("if x > 10:\n    if x < 20:\n        print(\"조건에 맞습니다.\")"),
-            P("`x`는 이미 정해져 있다고 보고, `x = 15` 로 두고 작성하세요."),
+            P("`x = 15` 로 두고 작성하세요."),
         ],
         tests=[test()],
         hints=[
@@ -221,7 +318,7 @@ PROBLEMS = [
             TIP("들여쓰기 단계가 줄어들면 코드가 훨씬 읽기 편해집니다. 중첩이 깊어지면 합칠 수 있는지 살펴보세요."),
         ]),
 
-    problem("w5-p5", "False로 변환되는 값", level=2, tags=["불"], ptype="choice",
+    problem("w5-p6", "False로 변환되는 값", level=2, tags=["불"], ptype="choice",
         prompt=[P("아래 값 중 `if` 조건에서 **True로 변환되는 것**을 고르세요.")],
         options=[
             {"text": "①", "code": 'if 0:'},
@@ -241,23 +338,87 @@ PROBLEMS = [
             WARN("`input()`의 결과는 항상 문자열이라 `if input():` 은 사용자가 그냥 엔터만 치지 않는 한 언제나 True입니다."),
         ]),
 
-    problem("w5-p6", "계절 구하기", level=3, tags=["elif"],
+    problem("w5-p7", "네 수 중 가장 큰 수", level=3, tags=["if", "비교"],
         prompt=[
-            P("월을 입력받아 계절을 출력하세요. 프롬프트는 `월> ` 입니다."),
-            P("`3~5`월 봄, `6~8`월 여름, `9~11`월 가을, 나머지(`12, 1, 2`월)는 겨울입니다."),
-            OUT("현재는 여름입니다."),
-            P("입력값이 `7`일 때의 결과입니다."),
+            P("네 개의 숫자를 입력받아 **가장 큰 수**를 출력하세요."),
+            P("프롬프트는 순서대로 `첫번째> `, `두번째> `, `세번째> `, `네번째> ` 입니다."),
+            OUT("가장 큰 숫자는 30"),
+            P("입력값이 `10`, `20`, `30`, `5` 일 때의 결과입니다."),
         ],
-        tests=[test(stdin=["7"]), test(stdin=["3"]), test(stdin=["11"]), test(stdin=["12"]), test(stdin=["1"])],
+        tests=[
+            test(stdin=["10", "20", "30", "5"]),
+            test(stdin=["100", "2", "3", "4"]),
+            test(stdin=["1", "2", "3", "400"]),
+            test(stdin=["-5", "-1", "-9", "-3"]),
+        ],
         hints=[
-            "연쇄 비교를 쓰면 3 <= month <= 5 처럼 간단히 쓸 수 있습니다.",
-            "봄, 여름, 가을을 elif 로 이어 쓰고 나머지는 else 로 처리합니다.",
-            "겨울(12, 1, 2월)은 연속된 범위가 아니라서 else 로 두는 것이 가장 깔끔합니다.",
+            "중첩 if 로 모든 경우를 따지면 아주 복잡해집니다.",
+            "둘씩 짝지어 비교하세요. a와 b 중 큰 것을 max1, c와 d 중 큰 것을 max2 에 담습니다.",
+            "마지막에 max1 과 max2 를 비교하면 됩니다. print(\"가장 큰 숫자는\", ...) 형식입니다.",
         ],
-        solution='month = int(input("월> "))\n\nif 3 <= month <= 5:\n    print("현재는 봄입니다.")\nelif 6 <= month <= 8:\n    print("현재는 여름입니다.")\nelif 9 <= month <= 11:\n    print("현재는 가을입니다.")\nelse:\n    print("현재는 겨울입니다.")',
+        solution='''a = int(input("첫번째> "))
+b = int(input("두번째> "))
+c = int(input("세번째> "))
+d = int(input("네번째> "))
+
+if a > b:
+    max1 = a
+else:
+    max1 = b
+
+if c > d:
+    max2 = c
+else:
+    max2 = d
+
+if max1 > max2:
+    print("가장 큰 숫자는", max1)
+else:
+    print("가장 큰 숫자는", max2)''',
         explain=[
-            P("겨울은 `12, 1, 2`월로 범위가 끊겨 있습니다. `else`로 처리하면 조건을 따로 쓸 필요가 없습니다."),
-            P("`elif`는 위 조건이 거짓일 때만 검사하므로, 봄·여름·가을이 아니면 자동으로 겨울입니다."),
-            TIP("교재에서는 `import datetime` 으로 현재 월을 가져오는 예제가 나옵니다. `now = datetime.datetime.now()` 로 만든 뒤 `now.month` 를 쓰면 오늘 날짜 기준으로 동작합니다."),
+            P("**토너먼트 방식**입니다. 둘씩 짝지어 이긴 것끼리 다시 비교합니다."),
+            P("중첩 `if` 로 모든 경우를 따지는 것보다 훨씬 단순하고 실수가 적습니다."),
+            TIP("이 문제는 네 가지 입력으로 채점합니다. 음수만 넣은 경우도 있으니 특정 값에만 맞는 코드는 통과하지 못합니다."),
+            TIP("파이썬에는 `max(a, b, c, d)` 라는 내장 함수가 있습니다. 다만 지금은 조건문 연습이므로 직접 만들어 보세요."),
+        ]),
+
+    problem("w5-p8", "성적 등급 매기기", level=3, tags=["elif", "논리 연산자"],
+        prompt=[
+            P("국어, 영어, 수학 점수를 입력받아 **평균**으로 등급을 매기세요."),
+            P("프롬프트는 `국어> `, `영어> `, `수학> ` 입니다."),
+            P("평균 `80` 이상이면 `매우잘함`, `60` 이상이면 `잘함`, `40` 이상이면 `보통`, 그 미만은 `못함` 입니다."),
+            OUT("평균 = 90.0\n매우잘함"),
+            P("입력값이 `100`, `90`, `80` 일 때의 결과입니다. 평균을 먼저 출력하세요."),
+        ],
+        tests=[
+            test(stdin=["100", "90", "80"]),
+            test(stdin=["70", "60", "50"]),
+            test(stdin=["40", "40", "40"]),
+            test(stdin=["10", "20", "30"]),
+        ],
+        hints=[
+            "세 점수를 int() 로 받아 더한 뒤 3 으로 나눕니다.",
+            'print("평균 =", avg) 로 평균을 먼저 출력하세요. / 로 나누면 실수가 됩니다.',
+            "그다음 if avg >= 80: / elif avg >= 60: / elif avg >= 40: / else: 로 등급을 나눕니다.",
+        ],
+        solution='''kor = int(input("국어> "))
+eng = int(input("영어> "))
+mat = int(input("수학> "))
+
+avg = (kor + eng + mat) / 3
+print("평균 =", avg)
+
+if avg >= 80:
+    print("매우잘함")
+elif avg >= 60:
+    print("잘함")
+elif avg >= 40:
+    print("보통")
+else:
+    print("못함")''',
+        explain=[
+            P("`elif` 는 위 조건이 거짓일 때만 검사하므로 큰 값부터 차례로 쓰면 됩니다."),
+            P("수업에서는 `(avg <= 100) and (avg >= 80)` 처럼 위아래를 모두 적으셨는데, 큰 값부터 검사하면 위쪽 조건은 생략할 수 있습니다."),
+            TIP("평균은 `/` 로 나누므로 항상 실수입니다. 그래서 `90.0` 처럼 `.0` 이 붙습니다."),
         ]),
 ]

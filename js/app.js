@@ -208,6 +208,7 @@
     drafts: {},
     stdins: {},
     results: {},
+    runs: {},      // 문제별 마지막 실행 결과 (Shell 과 Variables 에 보여줄 내용)
     picks: {},
   };
 
@@ -307,11 +308,189 @@
     state.tab = "scratch";
     state.scratchCode = code;
     state.scratchStdin = (stdin || []).join("\n");
+    state.scratchResult = null;
     render();
     setTimeout(function () {
       var ta = document.querySelector("#scratch-editor");
       if (ta) { ta.focus(); ta.scrollIntoView({ block: "center", behavior: "smooth" }); }
     }, 40);
+  }
+
+
+  /* ---------- Thonny 를 닮은 실습 패널 -------------------------------------- */
+
+  /**
+   * 수업에서 쓰는 Thonny 와 비슷한 배치의 실습 패널을 만든다.
+   * 위에서부터 도구 모음 · 파일 탭 · 편집기 · 입력값 · Shell · Variables 순이다.
+   *
+   * opts = {
+   *   fileName, code, onCodeChange,
+   *   stdinText, stdinReadonly, onStdinChange,
+   *   run: 실행 버튼을 눌렀을 때 부를 함수,
+   *   extraButtons: [{label, onClick}],
+   *   result: 마지막 실행 결과 (PyRunner.run 의 반환값),
+   *   editorId
+   * }
+   */
+  function buildThonny(opts) {
+    var box = el("div", { class: "thonny" });
+
+    /* 도구 모음 */
+    var toolbar = el("div", { class: "th-toolbar" }, [
+      el("button", {
+        class: "th-run",
+        type: "button",
+        onclick: opts.run,
+      }, [
+        el("span", { html: '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>' }),
+        document.createTextNode(opts.runLabel || "실행"),
+      ]),
+    ]);
+    (opts.extraButtons || []).forEach(function (b) {
+      toolbar.appendChild(el("button", {
+        class: "th-btn", type: "button", onclick: b.onClick,
+      }, [b.label]));
+    });
+    toolbar.appendChild(el("span", { class: "th-spacer" }));
+    toolbar.appendChild(el("span", { class: "th-kbd", text: "Ctrl+Enter 실행 · Tab 들여쓰기" }));
+    box.appendChild(toolbar);
+
+    /* 파일 탭 */
+    box.appendChild(el("div", { class: "th-tabs" }, [
+      el("span", { class: "th-tab", text: opts.fileName || "untitled.py" }),
+    ]));
+
+    /* 편집기 (줄 번호 + 입력 영역) */
+    var gutter = el("div", { class: "th-gutter" });
+    var ta = el("textarea", {
+      class: "th-code",
+      id: opts.editorId,
+      spellcheck: "false",
+      autocapitalize: "off",
+      autocomplete: "off",
+      autocorrect: "off",
+      placeholder: opts.placeholder || "여기에 코드를 작성하세요",
+      oninput: function (e) {
+        syncGutter(gutter, e.target);
+        if (opts.onCodeChange) opts.onCodeChange(e.target.value);
+      },
+      onkeydown: function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          opts.run();
+          return;
+        }
+        editorKeys(e);
+        setTimeout(function () { syncGutter(gutter, ta); }, 0);
+      },
+      onscroll: function () { gutter.scrollTop = ta.scrollTop; },
+    });
+    ta.value = opts.code || "";
+    syncGutter(gutter, ta);
+    box.appendChild(el("div", { class: "th-editor" }, [gutter, ta]));
+
+    /* 입력값 */
+    if (opts.stdinText !== null && opts.stdinText !== undefined) {
+      var sb = el("textarea", {
+        rows: String(Math.max(1, String(opts.stdinText).split("\n").length)),
+        placeholder: "input() 이 필요하면 한 줄에 하나씩",
+        title: opts.stdinReadonly ? "채점에 사용되는 입력값입니다" : "input() 에 순서대로 들어갈 값",
+        oninput: function (e) { if (opts.onStdinChange) opts.onStdinChange(e.target.value); },
+      });
+      if (opts.stdinReadonly) sb.setAttribute("readonly", "readonly");
+      sb.value = opts.stdinText;
+      box.appendChild(el("div", { class: "th-stdin" }, [
+        el("label", { text: "입력값" }),
+        sb,
+      ]));
+    }
+
+    /* Shell */
+    box.appendChild(el("div", { class: "th-pane-title" }, [
+      document.createTextNode("Shell"),
+      el("span", { class: "th-badge", text: opts.fileName ? ">>> %Run " + opts.fileName : "" }),
+    ]));
+    box.appendChild(buildShell(opts.result, opts.fileName));
+
+    /* 오류 도움말 */
+    if (opts.result && opts.result.error && opts.result.error.hint) {
+      box.appendChild(el("div", { class: "th-assist" }, [
+        el("b", { text: "도움말" }),
+        el("span", { text: opts.result.error.hint }),
+      ]));
+    }
+
+    /* Variables */
+    box.appendChild(el("div", { class: "th-pane-title" }, [
+      document.createTextNode("Variables"),
+      el("span", { class: "th-badge", text: "실행이 끝난 뒤 변수에 남은 값" }),
+    ]));
+    box.appendChild(buildVars(opts.result));
+
+    return box;
+  }
+
+  /** 줄 번호를 코드 줄 수에 맞춘다 */
+  function syncGutter(gutter, ta) {
+    var n = ta.value.split("\n").length;
+    var lines = [];
+    for (var i = 1; i <= n; i++) lines.push(i);
+    gutter.textContent = lines.join("\n");
+    gutter.scrollTop = ta.scrollTop;
+  }
+
+  /** Shell 영역: 실행 명령줄 + 출력(또는 오류) */
+  function buildShell(result, fileName) {
+    var pre = el("pre", { class: "th-shell" });
+    if (!result) {
+      pre.appendChild(el("span", { class: "th-empty", text: "실행 버튼을 누르면 결과가 여기에 나옵니다." }));
+      return pre;
+    }
+    pre.appendChild(el("span", {
+      class: "th-run-line",
+      text: ">>> %Run " + (fileName || "untitled.py") + "\n",
+    }));
+    if (result.display) pre.appendChild(document.createTextNode(result.display));
+    if (result.error) {
+      pre.appendChild(el("span", {
+        class: "th-err",
+        text: (result.display && !/\n$/.test(result.display) ? "\n" : "") +
+          "Traceback (most recent call last):\n  File \"" + (fileName || "untitled.py") + "\"" +
+          (result.error.line ? ", line " + result.error.line : "") + "\n" +
+          result.error.type + ": " + result.error.message + "\n",
+      }));
+    } else if (!result.display) {
+      pre.appendChild(el("span", { class: "th-empty", text: "(출력 없음)" }));
+    }
+    return pre;
+  }
+
+  /** Variables 영역: 실행 후 남은 변수 목록 */
+  function buildVars(result) {
+    if (!result || !result.variables || !result.variables.length) {
+      return el("div", {
+        class: "th-vars-empty",
+        text: result ? "표시할 변수가 없습니다." : "아직 실행하지 않았습니다.",
+      });
+    }
+    return el("div", { class: "th-vars" }, [
+      el("table", null, [
+        el("thead", null, [
+          el("tr", null, [
+            el("th", { text: "Name" }),
+            el("th", { text: "Value" }),
+            el("th", { text: "형" }),
+          ]),
+        ]),
+        el("tbody", null, result.variables.map(function (v) {
+          return el("tr", null, [
+            el("td", { text: v.name }),
+            el("td", { text: v.value }),
+            el("td", { text: v.type }),
+          ]);
+        })),
+      ]),
+    ]);
   }
 
   /* ---------- 편집기 ------------------------------------------------------ */
@@ -565,10 +744,10 @@
     else if (p.type === "predict") right.appendChild(renderPredictInput(p));
     else right.appendChild(renderChoices(p));
 
-    right.appendChild(renderActions(p));
-
     var res = state.results[p.id];
     if (res) right.appendChild(renderVerdict(p, res));
+
+    right.appendChild(renderActions(p));
 
     if (progress.revealed[p.id] || progress.solved[p.id]) {
       right.appendChild(renderExplain(p));
@@ -577,45 +756,50 @@
     return el("div", { class: "prob-body" }, [left, right]);
   }
 
-  function renderCodeWrap(p) {
-    var stdinNeeded = p.tests.some(function (t) { return t.stdin && t.stdin.length; });
-    var wrap = el("div", { class: "editor-wrap" }, [
-      makeEditor("editor-" + p.id,
-        state.drafts[p.id] !== undefined ? state.drafts[p.id] : (p.starter || ""),
-        null,
-        function (v) { state.drafts[p.id] = v; scheduleDraftSave(); }),
-    ]);
-
-    if (stdinNeeded) {
-      var firstStdin = (p.tests[0].stdin || []).join("\n");
-      var box = el("textarea", {
-        class: "stdin",
-        rows: String(Math.max(1, p.tests[0].stdin.length)),
-        readonly: "readonly",
-        title: "채점에 사용되는 입력값입니다",
-      });
-      box.value = firstStdin;
-      wrap.appendChild(el("div", { class: "stdin-row" }, [
-        el("label", { text: "입력값" }),
-        box,
-      ]));
-    }
-    return wrap;
-  }
-
   function renderCodeWorkbench(p) {
-    var frag = document.createDocumentFragment();
-    frag.appendChild(renderCodeWrap(p));
+    var stdinNeeded = p.tests.some(function (t) { return t.stdin && t.stdin.length; });
+    var holder = el("div", { class: "panel", style: "gap:9px" });
+
+    holder.appendChild(buildThonny({
+      fileName: p.id + ".py",
+      editorId: "editor-" + p.id,
+      code: state.drafts[p.id] !== undefined ? state.drafts[p.id] : (p.starter || ""),
+      onCodeChange: function (v) { state.drafts[p.id] = v; scheduleDraftSave(); },
+      stdinText: stdinNeeded ? (p.tests[0].stdin || []).join("\n") : null,
+      stdinReadonly: true,
+      result: state.runs[p.id],
+      runLabel: "실행",
+      run: function () { runProblem(p, false); },
+      extraButtons: [
+        { label: "실행하고 채점", onClick: function () { runProblem(p, true); } },
+      ],
+    }));
+
     if (p.tests.length > 1) {
-      frag.appendChild(el("p", {
+      holder.appendChild(el("p", {
         class: "verdict-note",
         style: "font-size:12px;color:var(--ink-faint)",
-        text: "이 문제는 " + p.tests.length + "가지 입력으로 채점합니다. 특정 값에만 맞는 코드는 통과하지 못합니다.",
+        text: "채점은 " + p.tests.length + "가지 입력으로 합니다. 특정 값에만 맞는 코드는 통과하지 못합니다. "
+          + "위 입력값 칸은 그중 첫 번째입니다.",
       }));
     }
-    var holder = el("div", { class: "panel", style: "gap:9px" });
-    holder.appendChild(frag);
     return holder;
+  }
+
+  /** 문제를 실행한다. grade 가 true 면 채점까지 한다. */
+  function runProblem(p, grade) {
+    var code = state.drafts[p.id] !== undefined ? state.drafts[p.id] : (p.starter || "");
+    var stdin = (p.tests[0] && p.tests[0].stdin) || [];
+    state.runs[p.id] = R.run(code, {
+      inputs: stdin,
+      timeLimit: (p.time_limit || 10) * 1000,
+    });
+    state.results[p.id] = grade ? gradeCode(p) : null;
+    if (grade && state.results[p.id].kind === "pass" && !progress.solved[p.id]) {
+      progress.solved[p.id] = true;
+      saveProgress();
+    }
+    render();
   }
 
   function renderPredictInput(p) {
@@ -660,38 +844,20 @@
   function renderActions(p) {
     var acts = el("div", { class: "actions" });
 
-    acts.appendChild(el("button", {
-      class: "btn btn-primary",
-      type: "button",
-      onclick: function () {
-        var res = p.type === "code" ? gradeCode(p) : p.type === "predict" ? gradePredict(p) : gradeChoice(p);
-        state.results[p.id] = res;
-        if (res.kind === "pass" && !progress.solved[p.id]) {
-          progress.solved[p.id] = true;
-          saveProgress();
-        }
-        render();
-      },
-    }, [p.type === "code" ? "실행하고 채점" : "정답 확인"]));
-
-    if (p.type === "code") {
+    if (p.type !== "code") {
       acts.appendChild(el("button", {
-        class: "btn btn-ghost",
+        class: "btn btn-primary",
         type: "button",
         onclick: function () {
-          var code = state.drafts[p.id] || "";
-          var stdin = (p.tests[0] && p.tests[0].stdin) || [];
-          var r = R.run(code, { inputs: stdin, timeLimit: 8000 });
-          state.results[p.id] = {
-            kind: "info",
-            title: r.error ? r.error.type + " 가 발생했습니다." : "실행했습니다. (채점은 하지 않았습니다)",
-            note: r.error ? r.error.hint : null,
-            errorText: r.error ? r.error.text : null,
-            display: r.display,
-          };
+          var res = p.type === "predict" ? gradePredict(p) : gradeChoice(p);
+          state.results[p.id] = res;
+          if (res.kind === "pass" && !progress.solved[p.id]) {
+            progress.solved[p.id] = true;
+            saveProgress();
+          }
           render();
         },
-      }, ["실행만"]));
+      }, ["정답 확인"]));
     }
 
     acts.appendChild(el("button", {
@@ -704,7 +870,6 @@
       },
     }, [progress.revealed[p.id] || progress.solved[p.id] ? "해설 다시 보기" : "해설 보기"]));
 
-    acts.appendChild(el("span", { class: "kbd-hint", text: "Tab 들여쓰기" }));
     return acts;
   }
 
@@ -719,13 +884,6 @@
 
     if (res.note) kids.push(el("div", { class: "verdict-note", text: res.note }));
 
-    if (res.errorText) {
-      kids.push(el("pre", {
-        text: res.errorText + (res.line ? "  (" + res.line + "번째 줄)" : ""),
-        style: "background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:8px 10px;font-size:12px;color:var(--bad);white-space:pre-wrap",
-      }));
-    }
-
     if (res.mine !== undefined && res.want !== undefined) {
       kids.push(el("div", { class: "diff-grid" }, [
         el("div", { class: "diff-col" }, [
@@ -737,8 +895,6 @@
           el("div", { class: "diff-box", text: R.normalize(res.want) }),
         ]),
       ]));
-    } else if (res.display && res.kind === "info" && !res.errorText) {
-      kids.push(el("div", { class: "diff-box", text: R.normalize(res.display) || "(출력 없음)" }));
     }
 
     return el("div", { class: "verdict " + cls }, kids);
@@ -822,69 +978,40 @@
       el("div", { class: "concept-head", style: "cursor:default" }, [
         el("span", { class: "concept-title", text: "연습장" }),
       ]),
-      el("div", { class: "concept-summary", text: "채점 없이 자유롭게 코드를 실행해 보는 곳입니다. 개념 설명의 예제를 여기로 가져와 고쳐 볼 수 있습니다." }),
-    ]);
-
-    var body = el("div", { class: "concept-body" });
-
-    var editorWrap = el("div", { class: "editor-wrap" }, [
-      makeEditor("scratch-editor", state.scratchCode || 'print("안녕하세요")\n', null, function (v) {
-        state.scratchCode = v;
+      el("div", {
+        class: "concept-summary",
+        text: "채점 없이 자유롭게 코드를 실행해 보는 곳입니다. 개념 설명의 예제를 여기로 가져와 고쳐 볼 수 있습니다.",
       }),
     ]);
 
-    var stdinBox = el("textarea", {
-      class: "stdin",
-      rows: "2",
-      placeholder: "input() 이 필요하면 한 줄에 하나씩",
-      oninput: function (e) { state.scratchStdin = e.target.value; },
-    });
-    stdinBox.value = state.scratchStdin || "";
-
-    editorWrap.appendChild(el("div", { class: "stdin-row" }, [
-      el("label", { text: "입력값" }),
-      stdinBox,
-    ]));
-
-    body.appendChild(editorWrap);
-
-    var out = el("div", { class: "diff-box", style: "max-height:none" });
-    out.textContent = state.scratchOut === undefined ? "실행 버튼을 누르면 결과가 여기에 나옵니다." : state.scratchOut;
-
-    body.appendChild(el("div", { class: "actions" }, [
-      el("button", {
-        class: "btn btn-primary",
-        type: "button",
-        onclick: function () {
-          var r = R.run(state.scratchCode || "", {
-            inputs: parseStdin(state.scratchStdin),
-            timeLimit: 8000,
-          });
-          state.scratchOut = r.error
-            ? (r.display ? r.display + "\n" : "") + r.error.text + (r.error.hint ? "\n\n" + r.error.hint : "")
-            : (r.display || "(출력 없음)");
-          render();
-          setTimeout(function () {
-            var o = document.querySelector("#scratch-out");
-            if (o) o.scrollIntoView({ block: "nearest" });
-          }, 30);
+    var body = el("div", { class: "concept-body" });
+    body.appendChild(buildThonny({
+      fileName: "연습장.py",
+      editorId: "scratch-editor",
+      code: state.scratchCode !== undefined ? state.scratchCode : 'print("안녕하세요")\n',
+      onCodeChange: function (v) { state.scratchCode = v; },
+      stdinText: state.scratchStdin || "",
+      stdinReadonly: false,
+      onStdinChange: function (v) { state.scratchStdin = v; },
+      result: state.scratchResult,
+      run: function () {
+        state.scratchResult = R.run(state.scratchCode || "", {
+          inputs: parseStdin(state.scratchStdin),
+          timeLimit: 8000,
+        });
+        render();
+      },
+      extraButtons: [
+        {
+          label: "비우기",
+          onClick: function () {
+            state.scratchCode = "";
+            state.scratchResult = null;
+            render();
+          },
         },
-      }, ["실행"]),
-      el("button", {
-        class: "btn btn-ghost",
-        type: "button",
-        onclick: function () {
-          state.scratchCode = "";
-          state.scratchOut = undefined;
-          render();
-        },
-      }, ["비우기"]),
-      el("span", { class: "kbd-hint", text: "Tab 들여쓰기 · 콜론 뒤 자동 들여쓰기" }),
-    ]));
-
-    out.id = "scratch-out";
-    body.appendChild(el("div", { class: "panel-label", text: "실행 결과" }));
-    body.appendChild(out);
+      ],
+    }));
 
     wrap.appendChild(body);
     return wrap;

@@ -131,6 +131,7 @@
         timedOut: false,
         inputsUsed: 0,
         inputsLeft: queue.length,
+        variables: [],
       };
     }
 
@@ -170,8 +171,10 @@
 
     var error = null;
     var timedOut = false;
+    var variables = [];
     try {
-      global.Sk.importMainWithBody("<내 코드>", false, code, true);
+      var mod = global.Sk.importMainWithBody("<내 코드>", false, code, true);
+      variables = collectVariables(mod);
     } catch (e) {
       error = formatError(e);
       if (error.type === "TimeLimitError" || /time.*limit/i.test(error.text)) {
@@ -189,7 +192,37 @@
       timedOut: timedOut,
       inputsUsed: used,
       inputsLeft: queue.length,
+      variables: variables,
     };
+  }
+
+  /**
+   * 실행이 끝난 뒤 남아 있는 변수들을 모은다.
+   * Thonny 의 Variables 패널과 같은 내용을 보여주기 위한 것이라,
+   * 함수와 모듈처럼 값이 아닌 것은 빼고 사람이 만든 변수만 남긴다.
+   */
+  function collectVariables(mod) {
+    var out = [];
+    if (!mod || !mod.$d) return out;
+    var g = mod.$d;
+    var skip = { __name__: 1, __doc__: 1, __package__: 1, __file__: 1, __builtins__: 1 };
+    Object.keys(g).forEach(function (name) {
+      if (skip[name] || name.indexOf("__") === 0) return;
+      var v = g[name];
+      if (!v) return;
+      var type = v.tp$name || "";
+      if (type === "function" || type === "module" || type === "classobj" || type === "type") return;
+      var repr;
+      try {
+        repr = global.Sk.misceval.objectRepr(v);
+      } catch (e) {
+        return;
+      }
+      if (typeof repr !== "string") return;
+      if (repr.length > 300) repr = repr.slice(0, 300) + " …";
+      out.push({ name: name, value: repr, type: type });
+    });
+    return out;
   }
 
   /**
