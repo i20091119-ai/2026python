@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gothic+A1:wght@400;500;700&family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
 /* ==========================================================================
    파이썬 학습 워크북 — 디자인 토큰과 컴포넌트
@@ -49,13 +49,16 @@
   --code-def: #1447c4;
   --code-gutter: #a7b2c0;
 
-  --radius: 10px;
-  --radius-sm: 6px;
+  --radius: 14px;
+  --radius-sm: 9px;
   --shadow-sm: 0 1px 2px rgba(20, 30, 45, 0.06);
   --shadow: 0 6px 20px rgba(20, 30, 45, 0.1);
 
-  --font-display: "Gowun Batang", "Nanum Myeongjo", Georgia, serif;
-  --font-body: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  /* 제목은 동글동글한 Jua, 본문은 읽기 편한 Gothic A1,
+     요약과 힌트처럼 손으로 적어 둔 느낌이 어울리는 곳에는 Gaegu 를 쓴다. */
+  --font-display: "Jua", "Gothic A1", "Malgun Gothic", sans-serif;
+  --font-body: "Gothic A1", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-hand: "Gaegu", "Gothic A1", cursive;
   --font-mono: "Nanum Gothic Coding", "D2Coding", "Consolas", "Menlo", monospace;
 }
 
@@ -147,7 +150,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
-  line-height: 1.65;
+  line-height: 1.72;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -197,9 +200,9 @@ button {
 
 .brand-title {
   font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 .brand-sub {
@@ -372,11 +375,11 @@ button {
 }
 .week-title {
   font-family: var(--font-display);
-  font-size: 27px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  margin: 4px 0 5px;
-  line-height: 1.25;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0;
+  margin: 4px 0 6px;
+  line-height: 1.3;
 }
 .week-subtitle { font-size: 13.5px; color: var(--ink-soft); }
 
@@ -429,9 +432,9 @@ button {
 
 .concept-title {
   font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: 0;
   flex: 1;
   min-width: 0;
 }
@@ -444,11 +447,13 @@ button {
 .concept[data-open="true"] .chev { transform: rotate(90deg); }
 
 .concept-summary {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--ink-faint);
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink-soft);
   padding: 0 18px 13px;
-  margin-top: -8px;
+  margin-top: -6px;
 }
 
 .concept-body {
@@ -641,7 +646,13 @@ pre {
 }
 :root[data-theme="dark"] .prob[data-solved="true"] .prob-status { color: #10281c; }
 
-.prob-name { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; }
+.prob-name {
+  flex: 1; min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 16.5px;
+  letter-spacing: 0;
+}
 
 .prob-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
@@ -834,8 +845,8 @@ pre {
 }
 .hint-btn:hover { background: var(--surface-2); color: var(--ink); }
 .hint-no {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-hand);
+  font-size: 14px;
   font-weight: 700;
   color: var(--warn);
   background: var(--warn-wash);
@@ -2973,7 +2984,7 @@ window.COURSE_DATA = {
        "note": "randint(1, 6) 은 1 이상 6 이하의 정수를 무작위로 하나 고릅니다. 실행할 때마다 달라집니다.",
        "stdin": [],
        "title": null,
-       "output": "주사위: 2\n",
+       "output": "주사위: 5\n",
        "is_error": false,
        "varies": true
       },
@@ -8249,10 +8260,10 @@ window.COURSE_DATA = {
       return el("div", { class: "table-wrap" }, [
         el("table", null, [
           el("thead", null, [
-            el("tr", null, b.head.map(function (h) { return el("th", { text: h }); })),
+            el("tr", null, b.head.map(function (h) { return el("th", { html: richText(h) }); })),
           ]),
           el("tbody", null, b.rows.map(function (r) {
-            return el("tr", null, r.map(function (c) { return el("td", { text: c }); }));
+            return el("tr", null, r.map(function (c) { return el("td", { html: richText(c) }); }));
           })),
         ]),
       ]);

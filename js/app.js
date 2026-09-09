@@ -250,10 +250,10 @@
       return el("div", { class: "table-wrap" }, [
         el("table", null, [
           el("thead", null, [
-            el("tr", null, b.head.map(function (h) { return el("th", { text: h }); })),
+            el("tr", null, b.head.map(function (h) { return el("th", { html: richText(h) }); })),
           ]),
           el("tbody", null, b.rows.map(function (r) {
-            return el("tr", null, r.map(function (c) { return el("td", { text: c }); }));
+            return el("tr", null, r.map(function (c) { return el("td", { html: richText(c) }); }));
           })),
         ]),
       ]);

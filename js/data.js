@@ -412,7 +412,7 @@ window.COURSE_DATA = {
        "note": "randint(1, 6) 은 1 이상 6 이하의 정수를 무작위로 하나 고릅니다. 실행할 때마다 달라집니다.",
        "stdin": [],
        "title": null,
-       "output": "주사위: 2\n",
+       "output": "주사위: 5\n",
        "is_error": false,
        "varies": true
       },
