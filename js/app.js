@@ -31,13 +31,34 @@
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  /** **굵게** 와 `코드` 를 표시용 HTML 로 바꾼다 */
+  /**
+   * **굵게** 와 `코드` 를 표시용 HTML 로 바꾼다.
+   *
+   * 코드 조각을 먼저 자리표시자로 빼내는 것이 핵심이다.
+   * 그렇게 하지 않으면 `*` 나 `**` 처럼 별표가 들어 있는 코드를 먼저 HTML 로 바꿔 버려,
+   * 그 별표 때문에 바깥의 굵게 표시가 짝을 찾지 못하고 그대로 노출된다.
+   */
+  var PH = "\u0001";
+
   function richText(s) {
+    var codes = [];
     var out = esc(s);
+
+    // 1) `코드` 를 자리표시자로 치환해 둔다
     out = out.replace(/`([^`]+)`/g, function (_, c) {
-      return '<code class="inline">' + c + "</code>";
+      codes.push(c);
+      return PH + (codes.length - 1) + PH;
     });
-    out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+    // 2) **굵게** 적용. 앞뒤가 공백이 아닐 때만 짝으로 본다.
+    //    'a ** b' 처럼 곱셈·제곱 기호로 쓰인 별표가 굵게로 오인되지 않게 한다.
+    out = out.replace(/\*\*(\S(?:[\s\S]*?\S)?)\*\*/g, "<strong>$1</strong>");
+
+    // 3) 자리표시자를 코드 표기로 되돌린다
+    out = out.replace(new RegExp(PH + "(\\d+)" + PH, "g"), function (_, i) {
+      return '<code class="inline">' + codes[Number(i)] + "</code>";
+    });
+
     return out;
   }
 

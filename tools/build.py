@@ -18,8 +18,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "runner"))
 sys.path.insert(0, os.path.join(ROOT, "content"))
+sys.path.insert(0, HERE)
 
 import runner  # noqa: E402
+import lint_text  # noqa: E402
 
 WEEKS = ["week2", "week3", "week4", "week5", "week6", "week7"]
 
@@ -126,6 +128,17 @@ def main():
                 week["problems"].append(built)
         weeks.append(week)
         print(f"  {name}: 개념 {len(week['concepts'])}개, 문제 {len(week['problems'])}개")
+
+    # 문구의 서식(`코드`, **굵게**)이 화면에서 제대로 나오는지 검사한다
+    text_problems = []
+    for week in weeks:
+        text_problems += lint_text.check_week(week)
+    if text_problems:
+        print(f"\n문구 서식 문제 {len(text_problems)}건:")
+        for where, why, text in text_problems:
+            print(f"  - [{where}] {why}")
+            print(f"      {text.strip()[:110]}")
+        errors.append(f"문구 서식 문제 {len(text_problems)}건")
 
     data = {"weeks": weeks}
     out = os.path.join(ROOT, "js", "data.js")
